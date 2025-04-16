@@ -1,7 +1,9 @@
 # cloudbuild.yaml
 substitutions:
   _REGION: "us-central1"
-  _PROJECT_ID: "image-gallery-project-456914"
+  _PROJECT_ID: "image-gallery-project"
+options:
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 steps:
 # 1) API imajını build & push
 - name: 'gcr.io/cloud-builders/docker'
