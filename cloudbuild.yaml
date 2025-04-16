@@ -1,0 +1,59 @@
+# cloudbuild.yaml
+substitutions:
+  _REGION: "us-central1"
+  _PROJECT_ID: "image-gallery-project-456914"
+steps:
+# 1) API imajını build & push
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - build
+    - '-t'
+    - '$_REGION-docker.pkg.dev/$_PROJECT_ID/image-gallery-api/image-gallery-api:$SHORT_SHA'
+    - 'api'
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - push
+    - '$_REGION-docker.pkg.dev/$_PROJECT_ID/image-gallery-api/image-gallery-api:$SHORT_SHA'
+
+# 2) Cloud Run'a deploy
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - run
+    - deploy
+    - 'image-gallery-api'
+    - '--image'
+    - '$_REGION-docker.pkg.dev/$_PROJECT_ID/image-gallery-api/image-gallery-api:$SHORT_SHA'
+    - '--region'
+    - '$_REGION'
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated'
+
+# 3) Function kodunu zip’le ve bucket’a yükle
+- name: 'gcr.io/cloud-builders/zip'
+  args:
+    - '-r'
+    - 'generate-thumbnail.zip'
+    - 'functions/generate-thumbnail'
+- name: 'gcr.io/cloud-builders/gsutil'
+  args:
+    - cp
+    - 'generate-thumbnail.zip'
+    - 'gs://$_PROJECT_ID-images/'
+
+# 4) Cloud Function’ı deploy et
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - functions
+    - deploy
+    - 'generate-thumbnail'
+    - '--region'
+    - '$_REGION'
+    - '--runtime'
+    - 'nodejs18'
+    - '--trigger-resource'
+    - '$_PROJECT_ID-images'
+    - '--trigger-event'
+    - 'google.storage.object.finalize'
+    - '--entry-point'
+    - 'generateThumbnail'

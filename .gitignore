@@ -1,0 +1,11 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# Function zip
+functions/*.zip
