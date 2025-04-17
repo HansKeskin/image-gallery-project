@@ -32,19 +32,7 @@ steps:
     - 'managed'
     - '--allow-unauthenticated'
 
-# 3) Function kodunu zip’le ve bucket’a yükle
-- name: 'gcr.io/cloud-builders/zip'
-  args:
-    - '-r'
-    - 'generate-thumbnail.zip'
-    - 'functions/generate-thumbnail'
-- name: 'gcr.io/cloud-builders/gsutil'
-  args:
-    - cp
-    - 'generate-thumbnail.zip'
-    - "gs://${PROJECT_ID}-images/"
-
-# 4) Cloud Function’ı deploy et
+# 3) Cloud Function’ı source klasöründen deploy et
 - name: 'gcr.io/cloud-builders/gcloud'
   args:
     - functions
@@ -60,3 +48,5 @@ steps:
     - 'google.storage.object.finalize'
     - '--entry-point'
     - 'generateThumbnail'
+    - '--source'
+    - 'functions/generate-thumbnail'
