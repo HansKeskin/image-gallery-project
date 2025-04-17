@@ -1,21 +1,22 @@
 # cloudbuild.yaml
 substitutions:
   _REGION: "us-central1"
-  _PROJECT_ID: "image-gallery-project"
+
 options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+
 steps:
 # 1) API imajını build & push
 - name: 'gcr.io/cloud-builders/docker'
   args:
     - build
     - '-t'
-    - '$_REGION-docker.pkg.dev/$_PROJECT_ID/image-gallery-api/image-gallery-api:$SHORT_SHA'
+    - "us-central1-docker.pkg.dev/${PROJECT_ID}/image-gallery-api/image-gallery-api:$SHORT_SHA"
     - 'api'
 - name: 'gcr.io/cloud-builders/docker'
   args:
     - push
-    - '$_REGION-docker.pkg.dev/$_PROJECT_ID/image-gallery-api/image-gallery-api:$SHORT_SHA'
+    - "us-central1-docker.pkg.dev/${PROJECT_ID}/image-gallery-api/image-gallery-api:$SHORT_SHA"
 
 # 2) Cloud Run'a deploy
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -24,7 +25,7 @@ steps:
     - deploy
     - 'image-gallery-api'
     - '--image'
-    - '$_REGION-docker.pkg.dev/$_PROJECT_ID/image-gallery-api/image-gallery-api:$SHORT_SHA'
+    - "us-central1-docker.pkg.dev/${PROJECT_ID}/image-gallery-api/image-gallery-api:$SHORT_SHA"
     - '--region'
     - '$_REGION'
     - '--platform'
@@ -41,7 +42,7 @@ steps:
   args:
     - cp
     - 'generate-thumbnail.zip'
-    - 'gs://$_PROJECT_ID-images/'
+    - "gs://${PROJECT_ID}-images/"
 
 # 4) Cloud Function’ı deploy et
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -54,7 +55,7 @@ steps:
     - '--runtime'
     - 'nodejs18'
     - '--trigger-resource'
-    - '$_PROJECT_ID-images'
+    - "${PROJECT_ID}-images"
     - '--trigger-event'
     - 'google.storage.object.finalize'
     - '--entry-point'
